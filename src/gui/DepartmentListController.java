@@ -94,6 +94,7 @@ tableViewDepartment.setItems(obsList);
 			
 			DepartmentFormController controller = loader.getController(); // pegamos o controlador da tela que acabos de carregar do comando acima
 			controller.setDepartment(obj);
+			controller.setDepartmentService(new DepartmentService());
 			controller.updateFormData();
 			
 			Stage dialogStage = new Stage(); // criando uma nova variavel 
