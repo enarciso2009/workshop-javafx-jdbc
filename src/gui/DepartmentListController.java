@@ -52,7 +52,8 @@ private ObservableList<Department> obsList;
 
 public void onBtNewAction(ActionEvent event) {
 	Stage parentStage = Utils.currentStage(event);
-	createDialogForm("/gui/DepartmentForm.fxml", parentStage);
+	Department obj = new Department(); //o departamento esta vazio quando o botão é clicado
+	createDialogForm(obj, "/gui/DepartmentForm.fxml", parentStage); // incluimos o obj que na chamada do createDialogForm
 }
 
 public void setDepartmentService(DepartmentService service) {
@@ -86,10 +87,14 @@ tableViewDepartment.setItems(obsList);
 
 }
 	
-	private void createDialogForm(String absoluteName, Stage parentStage) {   // função para carregar o formulario para o usuario preencher um novo departamento.
+	private void createDialogForm(Department obj, String absoluteName, Stage parentStage) {   // função para carregar o formulario para o usuario preencher um novo departamento.
 		try {
 			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName)); // carregando a view 
 			Pane pane = loader.load();
+			
+			DepartmentFormController controller = loader.getController(); // pegamos o controlador da tela que acabos de carregar do comando acima
+			controller.setDepartment(obj);
+			controller.updateFormData();
 			
 			Stage dialogStage = new Stage(); // criando uma nova variavel 
 			dialogStage.setTitle("Enter Department data"); // colocando o titulo da janela 
