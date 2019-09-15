@@ -1,9 +1,12 @@
 package gui;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import db.DbException;
+import gui.listeners.DataChangeListener;
 import gui.util.Alerts;
 import gui.util.Constraints;
 import gui.util.Utils;
@@ -23,6 +26,8 @@ public class DepartmentFormController implements Initializable {
 
 	private DepartmentService service; // criado uma instancia do departmentSErvice para fazer o insert e update
 
+	private List<DataChangeListener> dataChangeListeners = new ArrayList<>();
+	
 	@FXML
 	private TextField txtId;
 
@@ -49,12 +54,21 @@ public void onBtSaveAction(ActionEvent event) {
 	try {    // abaixo temos comandos com relação a banco de dados e pode haver algum erro por isso estamos colocando o Try
 	    entity = getFormData(); // responsavel por pegar os dados da tela do programa grafico e instanciar no department
 	    service.saveOrUpdate(entity);
+	    notifyDataChangeListeners(); // responsavel por atualizar a lista 
 	    Utils.currentStage(event).close();   // este comando serve para fechar a tela no fim do processo de salvar o department
 	}
 	    	catch (DbException e) {
 	    		Alerts.showAlert("Error saving object", null, e.getMessage(), AlertType.ERROR);
 	    	}
 	    }
+
+
+	private void notifyDataChangeListeners() {  // emite o evento para atualizar a tela 
+	for (DataChangeListener listener : dataChangeListeners) {
+		listener.onDataChenged();
+	}
+	
+}
 
 
 	private Department getFormData() {
@@ -73,6 +87,10 @@ public void onBtSaveAction(ActionEvent event) {
 
 	public void setDepartment(Department entity) { // criada uma instancia do department
 		this.entity = entity;
+	}
+	
+	public void subscribeDataChangeListener(DataChangeListener listener) {
+		dataChangeListeners.add(listener);
 	}
 
 	public void setDepartmentService(DepartmentService service) { // criada a instancia para o departmentService

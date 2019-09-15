@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.ResourceBundle;
 
 import application.Main;
+import gui.listeners.DataChangeListener;
 import gui.util.Alerts;
 import gui.util.Utils;
 import javafx.collections.FXCollections;
@@ -27,7 +28,7 @@ import javafx.stage.Stage;
 import model.entities.Department;
 import model.services.DepartmentService;
 
-public class DepartmentListController implements Initializable {
+public class DepartmentListController implements Initializable, DataChangeListener {
 
 	private DepartmentService service;
 	
@@ -95,6 +96,7 @@ tableViewDepartment.setItems(obsList);
 			DepartmentFormController controller = loader.getController(); // pegamos o controlador da tela que acabos de carregar do comando acima
 			controller.setDepartment(obj);
 			controller.setDepartmentService(new DepartmentService());
+			controller.subscribeDataChangeListener(this); // colocamos ele aqui para ficar observando se teve alguma alteração na lista para fazer o update 
 			controller.updateFormData();
 			
 			Stage dialogStage = new Stage(); // criando uma nova variavel 
@@ -111,6 +113,13 @@ tableViewDepartment.setItems(obsList);
 			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
 		}
 		
+		
+		
+	}
+
+	@Override
+	public void onDataChenged() {  // este comando avisa que a table foi alterada 
+		updateTableView(); // o comando chama o update para atualizar a tabela 
 		
 		
 	}
