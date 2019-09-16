@@ -17,6 +17,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
 import model.services.DepartmentService;
+import model.services.SellerService;
 
 public class MainViewController implements Initializable {
 
@@ -29,7 +30,10 @@ public class MainViewController implements Initializable {
 
 	@FXML
 	public void onMenuItemSellerAction() {   // nome padrao sempre iniciar com on o nome da nossa variavel e por fim o que ele vai ser neste caso Action de Ação 
-		System.out.println("onMenuItemSellerAction");
+		loadView("/gui/SellerList.fxml", (SellerListController controller) -> { // criamos uma funcão de inicialização como lambda
+			controller.setSellerService(new SellerService());
+			controller.updateTableView();  // esta linha eh responsavel por dar um update na lista no programa grafico
+		});
 	}
 
 	@FXML
