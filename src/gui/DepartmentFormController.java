@@ -3,7 +3,9 @@ package gui;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 import db.DbException;
 import gui.listeners.DataChangeListener;
@@ -18,6 +20,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import model.entities.Department;
+import model.exceptions.ValidationException;
 import model.services.DepartmentService;
 
 public class DepartmentFormController implements Initializable {
@@ -57,6 +60,9 @@ public void onBtSaveAction(ActionEvent event) {
 	    notifyDataChangeListeners(); // responsavel por atualizar a lista 
 	    Utils.currentStage(event).close();   // este comando serve para fechar a tela no fim do processo de salvar o department
 	}
+	catch (ValidationException e) {
+		setErrorsMessages(e.getErrors());
+	}
 	    	catch (DbException e) {
 	    		Alerts.showAlert("Error saving object", null, e.getMessage(), AlertType.ERROR);
 	    	}
@@ -74,9 +80,20 @@ public void onBtSaveAction(ActionEvent event) {
 	private Department getFormData() {
 		Department obj = new Department();
 
+		ValidationException exception = new  ValidationException("validation exception");
+		
 		obj.setId(Utils.tryParseToInt(txtId.getText()));
+		
+		if (txtName.getText() == null || txtName.getText().trim().equals("")) {  //verificando com o trim se tem espações em branco no começo e fim do nome e equals se o campo esta em branco
+			exception.addError("name", "Field can't be empty"); // se o if der condição adicionamos o erro na classe validationException no Map 
+		}
 		obj.setName(txtName.getText());
 
+		if (exception.getErrors().size() > 0) {  // neste if estamos verificando se ouve alguma mensagem de erro no if acima se tiver teremos que trata-lá
+		throw exception;
+		
+		}
+		
 		return obj;
 	}
 
@@ -119,4 +136,34 @@ public void onBtSaveAction(ActionEvent event) {
 											// String
 
 	}
+	
+	private void setErrorsMessages(Map<String, String> errors) {	// este comando serve para apresentar os erros nos campos do formularios dentro de um label oculto que fizemos na tela grafica 
+	 Set<String> fields = errors.keySet();
+	 
+	 if (fields.contains("name")) {
+		 labelErroName.setText(errors.get("name"));
+	 }
 }
+
+}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
