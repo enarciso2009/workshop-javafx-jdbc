@@ -1,8 +1,11 @@
 package gui;
 
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
@@ -17,6 +20,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import model.entities.Seller;
@@ -36,9 +40,27 @@ public class SellerFormController implements Initializable {
 
 	@FXML
 	private TextField txtName;
+	
+	@FXML
+	private TextField txtEmail;
+	
+	@FXML
+	private DatePicker dpBirthDate;
+	
+	@FXML
+	private TextField txtBaseSalary;
 
 	@FXML
 	private Label labelErroName;
+	
+	@FXML
+	private Label labelErroEmail;
+	
+	@FXML
+	private Label labelErroBirthDate;
+	
+	@FXML
+	private Label labelErroBaseSalary;
 
 	@FXML
 	private Button btSave;
@@ -121,8 +143,11 @@ public void onBtSaveAction(ActionEvent event) {
 
 	private void initializeNodes() {
 		Constraints.setTextFieldInteger(txtId); // o campo id so vai aceitar numeros inteiros
-		Constraints.setTextFieldMaxLength(txtName, 30);// o campo name aceita no maximo 30 caracteres
-
+		Constraints.setTextFieldMaxLength(txtName, 70);// o campo name aceita no maximo 30 caracteres
+        Constraints.setTextFieldDouble(txtBaseSalary);
+        Constraints.setTextFieldMaxLength(txtEmail, 60);
+        Utils.formatDatePicker(dpBirthDate, "dd/MM/yyyy");
+        
 	}
 
 	public void updateFormData() { // neste bloco iremos preencher a tela do programa grafico SellerForm para
@@ -134,7 +159,15 @@ public void onBtSaveAction(ActionEvent event) {
 														// desta maneira
 		txtName.setText(entity.getName()); // neste caso não foi preciso fazer a conversão para string pois o nome já é
 											// String
-
+        txtEmail.setText(entity.getEmail());
+        
+        Locale.setDefault(Locale.US);
+        txtBaseSalary.setText(String.format("%.2f", entity.getBaseSalary()));
+		if (entity.getBirthDate() != null) {
+        dpBirthDate.setValue(LocalDate.ofInstant(entity.getBirthDate().toInstant(), ZoneId.systemDefault()));	
+		}
+		
+		
 	}
 	
 	private void setErrorsMessages(Map<String, String> errors) {	// este comando serve para apresentar os erros nos campos do formularios dentro de um label oculto que fizemos na tela grafica 
