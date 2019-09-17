@@ -39,23 +39,20 @@ public class SellerListController implements Initializable, DataChangeListener {
 	private SellerService service;
 
 	@FXML
-	private TableView<Seller> tableViewSeller; // referencias para nossa tela grafica
+	private TableView<Seller> tableViewSeller;
 
 	@FXML
 	private TableColumn<Seller, Integer> tableColumnId;
 
 	@FXML
 	private TableColumn<Seller, String> tableColumnName;
-	
 
 	@FXML
 	private TableColumn<Seller, String> tableColumnEmail;
 	
-
 	@FXML
 	private TableColumn<Seller, Date> tableColumnBirthDate;
 	
-
 	@FXML
 	private TableColumn<Seller, Double> tableColumnBaseSalary;
 	
@@ -71,12 +68,10 @@ public class SellerListController implements Initializable, DataChangeListener {
 	private ObservableList<Seller> obsList;
 
 	@FXML
-
 	public void onBtNewAction(ActionEvent event) {
 		Stage parentStage = Utils.currentStage(event);
-		Seller obj = new Seller(); // o departamento esta vazio quando o botão é clicado
-		createDialogForm(obj, "/gui/SellerForm.fxml", parentStage); // incluimos o obj que na chamada do
-																		// createDialogForm
+		Seller obj = new Seller();
+		createDialogForm(obj, "/gui/SellerForm.fxml", parentStage);
 	}
 
 	public void setSellerService(SellerService service) {
@@ -89,71 +84,56 @@ public class SellerListController implements Initializable, DataChangeListener {
 	}
 
 	private void initializeNodes() {
-		tableColumnId.setCellValueFactory(new PropertyValueFactory<>("Id")); // este comando serve para preencher as
-																				// colunas do programa grafico
-		tableColumnName.setCellValueFactory(new PropertyValueFactory<>("Name")); // este comando serve para preencher as
-																					// colunas do programa grafico
+		tableColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
+		tableColumnName.setCellValueFactory(new PropertyValueFactory<>("name"));
 		tableColumnEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
-		
 		tableColumnBirthDate.setCellValueFactory(new PropertyValueFactory<>("birthDate"));
 		Utils.formatTableColumnDate(tableColumnBirthDate, "dd/MM/yyyy");
-		
-		
 		tableColumnBaseSalary.setCellValueFactory(new PropertyValueFactory<>("baseSalary"));
 		Utils.formatTableColumnDouble(tableColumnBaseSalary, 2);
+
 		Stage stage = (Stage) Main.getMainScene().getWindow();
-		tableViewSeller.prefHeightProperty().bind(stage.heightProperty()); // este comandos servem para a grade
-																				// acompanhar o menu principal
+		tableViewSeller.prefHeightProperty().bind(stage.heightProperty());
 	}
 
-	public void updateTableView() { // este comando sera responsavel por criar a listagem para o obsList
+	public void updateTableView() {
 		if (service == null) {
-			throw new IllegalStateException("O service estava null");
+			throw new IllegalStateException("Service was null");
 		}
 		List<Seller> list = service.findAll();
 		obsList = FXCollections.observableArrayList(list);
 		tableViewSeller.setItems(obsList);
 		initEditButtons();
 		initRemoveButtons();
-
 	}
 
-	private void createDialogForm(Seller obj, String absoluteName, Stage parentStage) { // função para carregar o
-																							// formulario para o usuario
-																							// preencher um novo
-																							// vendedor.
+	private void createDialogForm(Seller obj, String absoluteName, Stage parentStage) {
 		try {
-			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName)); // carregando a view
+			FXMLLoader loader = new FXMLLoader(getClass().getResource(absoluteName));
 			Pane pane = loader.load();
 
-			SellerFormController controller = loader.getController(); // pegamos o controlador da tela que acabos de
-																			// carregar do comando acima
+			SellerFormController controller = loader.getController();
 			controller.setSeller(obj);
 			controller.setServices(new SellerService(), new DepartmentService());
 			controller.loadAssociatedObjects();
-			controller.subscribeDataChangeListener(this); // colocamos ele aqui para ficar observando se teve alguma
-															// alteração na lista para fazer o update
+			controller.subscribeDataChangeListener(this);
 			controller.updateFormData();
 
-			Stage dialogStage = new Stage(); // criando uma nova variavel
-			dialogStage.setTitle("Enter Seller data"); // colocando o titulo da janela
-			dialogStage.setScene(new Scene(pane)); // para trazer uma nova cena trazendo o pene como raiz
-			dialogStage.setResizable(false); // false a janela não pode ser redimencionada
-			dialogStage.initOwner(parentStage); // colocando quem é o pai desta janela
-			dialogStage.initModality(Modality.WINDOW_MODAL); // este comando que fala que o a janela esta travada
+			Stage dialogStage = new Stage();
+			dialogStage.setTitle("Enter Seller data");
+			dialogStage.setScene(new Scene(pane));
+			dialogStage.setResizable(false);
+			dialogStage.initOwner(parentStage);
+			dialogStage.initModality(Modality.WINDOW_MODAL);
 			dialogStage.showAndWait();
-
 		} catch (IOException e) {
 			e.printStackTrace();
 			Alerts.showAlert("IO Exception", "Error loading view", e.getMessage(), AlertType.ERROR);
 		}
-
 	}
 
-	@Override
-	public void onDataChenged() { // este comando avisa que a table foi alterada
-		updateTableView(); // o comando chama o update para atualizar a tabela
-
+	public void onDataChanged() {
+		updateTableView();
 	}
 
 	private void initEditButtons() {
@@ -194,8 +174,8 @@ public class SellerListController implements Initializable, DataChangeListener {
 	}
 
 	private void removeEntity(Seller obj) {
-	Optional <ButtonType> result = Alerts.showConfirmation("Confirmation", "Are you sure to delete");
-		
+		Optional<ButtonType> result = Alerts.showConfirmation("Confirmation", "Are you sure to delete?");
+
 		if (result.get() == ButtonType.OK) {
 			if (service == null) {
 				throw new IllegalStateException("Service was null");
@@ -207,21 +187,12 @@ public class SellerListController implements Initializable, DataChangeListener {
 			catch (DbIntegrityException e) {
 				Alerts.showAlert("Error removing object", null, e.getMessage(), AlertType.ERROR);
 			}
-		
-			
 		}
-		
 	}
 
+	@Override
+	public void onDataChenged() {
+		// TODO Auto-generated method stub
+		
+	}
 }
-
-
-
-
-
-
-
-
-
-
-

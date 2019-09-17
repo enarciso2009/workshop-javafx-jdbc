@@ -1,9 +1,11 @@
 package gui;
 
 import java.net.URL;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -37,9 +39,9 @@ import model.services.SellerService;
 
 public class SellerFormController implements Initializable {
 
-	private Seller entity; // criado uma instancia do department em baixo existe o set
+	private Seller entity;
 
-	private SellerService service; // criado uma instancia do departmentSErvice para fazer o insert e update
+	private SellerService service;
 
 	private DepartmentService departmentService;
 
@@ -64,16 +66,16 @@ public class SellerFormController implements Initializable {
 	private ComboBox<Department> comboBoxDepartment;
 
 	@FXML
-	private Label labelErroName;
+	private Label labelErrorName;
 
 	@FXML
-	private Label labelErroEmail;
+	private Label labelErrorEmail;
 
 	@FXML
-	private Label labelErroBirthDate;
+	private Label labelErrorBirthDate;
 
 	@FXML
-	private Label labelErroBaseSalary;
+	private Label labelErrorBaseSalary;
 
 	@FXML
 	private Button btSave;
@@ -83,56 +85,79 @@ public class SellerFormController implements Initializable {
 
 	private ObservableList<Department> obsList;
 
+	public void setSeller(Seller entity) {
+		this.entity = entity;
+	}
+
+	public void setServices(SellerService service, DepartmentService departmentService) {
+		this.service = service;
+		this.departmentService = departmentService;
+	}
+
+	public void subscribeDataChangeListener(DataChangeListener listener) {
+		dataChangeListeners.add(listener);
+	}
+
 	@FXML
 	public void onBtSaveAction(ActionEvent event) {
 		if (entity == null) {
 			throw new IllegalStateException("Entity was null");
-		} // excessoes criadas para avisar o programador
+		}
 		if (service == null) {
 			throw new IllegalStateException("Service was null");
 		}
-		try { // abaixo temos comandos com relação a banco de dados e pode haver algum erro
-				// por isso estamos colocando o Try
-			entity = getFormData(); // responsavel por pegar os dados da tela do programa grafico e instanciar no
-									// department
+		try {
+			entity = getFormData();
 			service.saveOrUpdate(entity);
-			notifyDataChangeListeners(); // responsavel por atualizar a lista
-			Utils.currentStage(event).close(); // este comando serve para fechar a tela no fim do processo de salvar o
-												// department
+			notifyDataChangeListeners();
+			Utils.currentStage(event).close();
 		} catch (ValidationException e) {
-			setErrorsMessages(e.getErrors());
+			setErrorMessages(e.getErrors());
 		} catch (DbException e) {
 			Alerts.showAlert("Error saving object", null, e.getMessage(), AlertType.ERROR);
 		}
 	}
 
-	private void notifyDataChangeListeners() { // emite o evento para atualizar a tela
+	private void notifyDataChangeListeners() {
 		for (DataChangeListener listener : dataChangeListeners) {
 			listener.onDataChenged();
 		}
-
 	}
 
 	private Seller getFormData() {
 		Seller obj = new Seller();
 
-		ValidationException exception = new ValidationException("validation exception");
+		ValidationException exception = new ValidationException("Validation error");
 
 		obj.setId(Utils.tryParseToInt(txtId.getText()));
 
-		if (txtName.getText() == null || txtName.getText().trim().equals("")) { // verificando com o trim se tem
-																				// espações em branco no começo e fim do
-																				// nome e equals se o campo esta em
-																				// branco
-			exception.addError("name", "Field can't be empty"); // se o if der condição adicionamos o erro na classe
-																// validationException no Map
+		if (txtName.getText() == null || txtName.getText().trim().equals("")) {
+			exception.addError("name", "Field can't be empty");
 		}
 		obj.setName(txtName.getText());
 
-		if (exception.getErrors().size() > 0) { // neste if estamos verificando se ouve alguma mensagem de erro no if
-												// acima se tiver teremos que trata-lá
+		if (txtEmail.getText() == null || txtEmail.getText().trim().equals("")) {
+			exception.addError("email", "Field can't be empty");
+		}
+		obj.setEmail(txtEmail.getText());
+		
+		if (dpBirthDate.getValue() == null) {
+			exception.addError("birthDate", "Field can't be empty");
+		}
+		else {
+			Instant instant = Instant.from(dpBirthDate.getValue().atStartOfDay(ZoneId.systemDefault()));
+			obj.setBirthDate(Date.from(instant));
+		}
+		
+		if (txtBaseSalary.getText() == null || txtBaseSalary.getText().trim().equals("")) {
+			exception.addError("baseSalary", "Field can't be empty");
+		}
+		obj.setBaseSalary(Utils.tryParseToDouble(txtBaseSalary.getText()));
+		
+		obj.setDepartment(comboBoxDepartment.getValue());
+		
+		if (exception.getErrors().size() > 0) {
 			throw exception;
-
 		}
 
 		return obj;
@@ -143,77 +168,56 @@ public class SellerFormController implements Initializable {
 		Utils.currentStage(event).close();
 	}
 
-	public void setSeller(Seller entity) { // criada uma instancia do department
-		this.entity = entity;
-	}
-
-	public void subscribeDataChangeListener(DataChangeListener listener) {
-		dataChangeListeners.add(listener);
-	}
-
-	public void setServices(SellerService service, DepartmentService departmentservice) { // criada a instancia para o
-																							// departmentService e o
-																							// SellerService
-		this.service = service;
-		this.departmentService = departmentservice;
-	}
-
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {
 		initializeNodes();
 	}
 
 	private void initializeNodes() {
-		Constraints.setTextFieldInteger(txtId); // o campo id so vai aceitar numeros inteiros
-		Constraints.setTextFieldMaxLength(txtName, 70);// o campo name aceita no maximo 30 caracteres
+		Constraints.setTextFieldInteger(txtId);
+		Constraints.setTextFieldMaxLength(txtName, 70);
 		Constraints.setTextFieldDouble(txtBaseSalary);
 		Constraints.setTextFieldMaxLength(txtEmail, 60);
 		Utils.formatDatePicker(dpBirthDate, "dd/MM/yyyy");
+		
 		initializeComboBoxDepartment();
 	}
 
-	public void updateFormData() { // neste bloco iremos preencher a tela do programa grafico SellerForm para
-									// incluir no banco de dados.
-		if (entity == null) { // vamos criar uma condição para verificar se o department esta nulo
-			throw new IllegalStateException("Entity was null"); // caso esteja nulo vai aparecer a mensagem de erro
+	public void updateFormData() {
+		if (entity == null) {
+			throw new IllegalStateException("Entity was null");
 		}
-		txtId.setText(String.valueOf(entity.getId())); // a caixa de texto id eh do tipo String por isso temos que fazer
-														// desta maneira
-		txtName.setText(entity.getName()); // neste caso não foi preciso fazer a conversão para string pois o nome já é
-											// String
+		txtId.setText(String.valueOf(entity.getId()));
+		txtName.setText(entity.getName());
 		txtEmail.setText(entity.getEmail());
-
 		Locale.setDefault(Locale.US);
 		txtBaseSalary.setText(String.format("%.2f", entity.getBaseSalary()));
 		if (entity.getBirthDate() != null) {
 			dpBirthDate.setValue(LocalDate.ofInstant(entity.getBirthDate().toInstant(), ZoneId.systemDefault()));
 		}
-	    if (entity.getDepartment() == null) {
-	    	comboBoxDepartment.getSelectionModel().selectFirst();
-	    }
-	    else {
-		comboBoxDepartment.setValue(entity.getDepartment());
+		if (entity.getDepartment() == null) {
+			comboBoxDepartment.getSelectionModel().selectFirst();
+		} else {
+			comboBoxDepartment.setValue(entity.getDepartment());
+		}
 	}
-	
-	}
+
 	public void loadAssociatedObjects() {
 		if (departmentService == null) {
 			throw new IllegalStateException("DepartmentService was null");
 		}
-
 		List<Department> list = departmentService.findAll();
 		obsList = FXCollections.observableArrayList(list);
 		comboBoxDepartment.setItems(obsList);
 	}
 
-	private void setErrorsMessages(Map<String, String> errors) { // este comando serve para apresentar os erros nos
-																	// campos do formularios dentro de um label oculto
-																	// que fizemos na tela grafica
+	private void setErrorMessages(Map<String, String> errors) {
 		Set<String> fields = errors.keySet();
 
-		if (fields.contains("name")) {
-			labelErroName.setText(errors.get("name"));
-		}
+		labelErrorName.setText((fields.contains("name") ? errors.get("name") : ""));
+		labelErrorEmail.setText((fields.contains("email") ? errors.get("email") : ""));
+		labelErrorBirthDate.setText((fields.contains("birthDate") ? errors.get("birthDate") : ""));
+		labelErrorBaseSalary.setText((fields.contains("baseSalary") ? errors.get("baseSalary") : ""));
 	}
 
 	private void initializeComboBoxDepartment() {
@@ -227,5 +231,4 @@ public class SellerFormController implements Initializable {
 		comboBoxDepartment.setCellFactory(factory);
 		comboBoxDepartment.setButtonCell(factory.call(null));
 	}
-
 }
